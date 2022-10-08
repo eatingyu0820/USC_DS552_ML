@@ -1,0 +1,1064 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "15e79c5b",
+   "metadata": {
+    "id": "bOWe_qdwwRpy"
+   },
+   "source": [
+    "Name: I-Ting Yu, Github: eatingyu0820, USC ID: 5350526235"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4481fe55",
+   "metadata": {
+    "id": "bOWe_qdwwRpy"
+   },
+   "source": [
+    "# HM2 - Combined Cycle Power Plant Data Set\n",
+    "The dataset contains data points collected from a Combined Cycle Power Plant over 6 years (2006-2011), when the power plant was set to work with full load. Features consist of hourly average ambient variables Temperature (T), Ambient Pressure (AP), Relative Humidity (RH) and Exhaust Vacuum (V) to predict the net hourly electrical energy output (EP) of the plant."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "de003953",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "20582d06",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ../data/CCPP/Folds5x2_pp.ods\n",
+    "df = pd.read_excel('/Users/melissayu/Desktop/USC/Fall2022/DS552/HM/HM2/data/CCPP/Folds5x2_pp.xlsx', sheet_name='Sheet1')\n",
+    "#df = pd.read_excel('.../data/CCPP/Folds5x2_pp.xlsx', sheet_name='Sheet1')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0dd25569",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (b)Exploring the data:\n",
+    "i. How many rows are in this data set? How many columns? What do the rows and columns represent?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "571bb4a7",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1220ece0",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "Answer:\n",
+    "- There are 9568 rows & 5 columns.\n",
+    "- Features consist of hourly average ambient variables Temperature (T), Ambient Pressure (AP), Relative Humidity (RH) and Exhaust Vacuum (V) to predict the net hourly electrical energy output (EP) of the plant.**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4cbb86d8",
+   "metadata": {
+    "id": "mwA1pPDgwyck"
+   },
+   "source": [
+    "ii. Make pairwise scatterplots of all the varianbles in the data set including the predictors (independent variables) with the dependent variable. Describe your findings."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "28183045",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "sns.pairplot(df)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5a8f070c",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "Answer:\n",
+    "- For PE & AT, the coefficient is negative.\n",
+    "- For PE & V, the coefficient is negative.\n",
+    "- For PE & AP, the coefficient is positive.\n",
+    "- For PE & RH, the correlation is not obvious to see.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0688ed9f",
+   "metadata": {
+    "id": "mwA1pPDgwyck"
+   },
+   "source": [
+    "iii. What are the mean, the median, range, first and third quartiles, and in- terquartile ranges of each of the variables in the dataset? Summarize them in a table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c60516db",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pip install prettytable "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a6628ca5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create table \n",
+    "# https://www.geeksforgeeks.org/how-to-make-a-table-in-python/\n",
+    "# using descrbie\n",
+    "\n",
+    "from prettytable import PrettyTable\n",
+    " \n",
+    "# Specify the Column Names while initializing the Table\n",
+    "myTable = PrettyTable(['', 'Temperature(T)', 'Ambient Pressure(AP)', 'Relative Humidity(RH)', 'Exhaust Vacuum(V)'])\n",
+    " \n",
+    "# Add rows\n",
+    "myTable.add_row([\"Mean\", df.iloc[:,0].mean(), df.iloc[:,1].mean(), df.iloc[:,2].mean(), df.iloc[:,3].mean()])\n",
+    "myTable.add_row([\"Median\", df.iloc[:,0].median(), df.iloc[:,1].median(), df.iloc[:,2].median(), df.iloc[:,3].median()])\n",
+    "myTable.add_row([\"Range\",df.iloc[:,0].max()-df.iloc[:,0].min(), df.iloc[:,1].max()-df.iloc[:,1].min(), df.iloc[:,2].max()-df.iloc[:,2].min(),df.iloc[:,3].max()-df.iloc[:,3].min()])\n",
+    "\n",
+    "# Using .qantile()\n",
+    "# https://stackoverflow.com/questions/45926230/how-to-calculate-1st-and-3rd-quartiles\n",
+    "myTable.add_row([\"1st quiartiles\", df.iloc[:,0].quantile(0.25), df.iloc[:,1].quantile(0.25), df.iloc[:,2].quantile(0.25), df.iloc[:,3].quantile(0.25)])\n",
+    "myTable.add_row([\"3rd quartiles\", df.iloc[:,0].quantile(0.75), df.iloc[:,1].quantile(0.75), df.iloc[:,2].quantile(0.75), df.iloc[:,3].quantile(0.75)])\n",
+    "\n",
+    "Tinter = df.iloc[:,0].quantile(0.75)-df.iloc[:,0].quantile(0.25)\n",
+    "APinter = df.iloc[:,1].quantile(0.75)-df.iloc[:,1].quantile(0.25)\n",
+    "RHinter = df.iloc[:,2].quantile(0.75)-df.iloc[:,2].quantile(0.25)\n",
+    "Vinter = df.iloc[:,3].quantile(0.75)-df.iloc[:,3].quantile(0.25)\n",
+    "myTable.add_row([\"Interquartile range\", Tinter, APinter, RHinter, Vinter])\n",
+    "\n",
+    "myTable\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b00c1fe",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (c) For each predictor, fit a simple linear regression model to predict the response. \n",
+    "Describe your results. In which of the models is there a statistically significant association between the predictor and the response? Create some plots to back up your assertions. Are there any outliers that you would like to remove from your data for each of these regression tasks?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "187146d8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html\n",
+    "from sklearn.linear_model import LinearRegression\n",
+    "import matplotlib.pyplot as plt\n",
+    "import statsmodels.api as sm\n",
+    "# reshape(-1,1) => -1 length of rows / 1 length of each subarray\n",
+    "# https://numpy.org/doc/stable/reference/generated/numpy.reshape.html\n",
+    "\n",
+    "EP = df.iloc[:,4] #target\n",
+    "xLabel = ['Temperature(T) - Predictor', 'Ambient Pressure(AP) - Predictor', 'Relative Humidity(RH) - Predictor', 'Exhaust Vacuum(V) - Predictor']\n",
+    "simple_linear_coef = list()\n",
+    "\n",
+    "for i in range(0,4):\n",
+    "    dataCol = df.iloc[:,i]\n",
+    "    # convert list to array to use .reshape()\n",
+    "    dataArray = np.array(dataCol)\n",
+    "    reshapeDate = dataArray.reshape((-1,1))\n",
+    "    reg = LinearRegression().fit(reshapeDate, EP)\n",
+    "    plt.plot(reshapeDate, EP,'o')\n",
+    "    plt.title('Simple Linear Regression Predict')\n",
+    "    plt.xlabel(xLabel[i])\n",
+    "    plt.ylabel('Electrical Energy(EP) - Output')\n",
+    "    # predict(X) - Predict using the linear model.\n",
+    "    prediction = reg.predict(reshapeDate)\n",
+    "    plt.plot(reshapeDate,prediction,'-')\n",
+    "    plt.show()\n",
+    "    \n",
+    "    # # Fit and summarize OLS model\n",
+    "    x_train = sm.add_constant(dataCol) #constant epsilon (e)\n",
+    "    model = sm.OLS(EP, x_train)\n",
+    "    res = model.fit()\n",
+    "    # paramaters(Coefficient): res.params\n",
+    "    simple_linear_coef.append(res.params[1])\n",
+    "    \n",
+    "    print(res.summary())\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e27600cb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Find the outliners: cooks distance, IQR, box plot are all valid ways of doing\n",
+    "# https://www.simplypsychology.org/boxplots.html#:~:text=When%20reviewing%20a%20box%20plot,whiskers%20of%20the%20box%20plot.&text=For%20example%2C%20outside%201.5%20times,Q3%20%2B%201.5%20*%20IQR).\n",
+    "title = ['Temperature(T) - Predictor', 'Ambient Pressure(AP) - Predictor', 'Relative Humidity(RH) - Predictor', 'Exhaust Vacuum(V) - Predictor']\n",
+    "# df.iloc[:,0].quantile(0.25)\n",
+    "# lowerQuartile = Q3 + 1.5 * IQR\n",
+    "# upperQuartile = Q1 - 1.5 * IQR \n",
+    "# Tinter = df.iloc[:,0].quantile(0.75)-df.iloc[:,0].quantile(0.25)\n",
+    "\n",
+    "for i in range(0,4):\n",
+    "    dataCol = df.iloc[:,i]\n",
+    "    plt.boxplot(dataCol, vert = 0, patch_artist = True)\n",
+    "    plt.title(title[i])\n",
+    "    plt.show()\n",
+    "    \n",
+    "    q1 = df.iloc[:,i].quantile(0.25)\n",
+    "    q3 = df.iloc[:,i].quantile(0.75)\n",
+    "    iqr = q3-q1\n",
+    "    lowerQuartile = q1 - 1.5 * iqr \n",
+    "    upperQuartile = q3 + 1.5 * iqr\n",
+    "    print('Lower Quartile', lowerQuartile)\n",
+    "    print('Upper Quartile', upperQuartile)\n",
+    "    print('Outliners:')\n",
+    "    # a[a < 12 | a > 30]\n",
+    "    print(dataCol[((dataCol < lowerQuartile) | (dataCol > upperQuartile))])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "710c3298",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (d) Fit a multiple regression model to predict the response using all of the predictors. \n",
+    "Describe your results. For which predictors can we reject the null hypothesis H0 :βj =0?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b1292097",
+   "metadata": {},
+   "source": [
+    "#### To reject null hypothesis, there are 2 ways:\n",
+    "- If the absolute value of the t-value is greater than the critical value, you reject the null hypothesis.\n",
+    "- If the p-value of the hypothesis test is less than some significance level (e.g. α = . 05), then we reject the null hypothesis."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2a9d4d05",
+   "metadata": {},
+   "source": [
+    "#### OLS Notes:\n",
+    "- const coef = alpha\n",
+    "- others coef = beta\n",
+    "- p>|t| = p-value\n",
+    "- The R-squared of the regression is the fraction of the variation in your dependent variable that is accounted for (or predicted by) your independent variables.\n",
+    "- The P value tells you how confident you can be that each individual variable has some correlation with the dependent variable, which is the important thing."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4ee4bd64",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# statsmodel_OLS - https://www.statsmodels.org/dev/regression.html\n",
+    "# from sklearn.model_selection import train_test_split\n",
+    "# import statsmodels.api as sm\n",
+    "# x = df[['AT', 'V', 'AP','RH']]\n",
+    "# y = df['PE']\n",
+    "# x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=None, random_state=0)\n",
+    "# regModel = LinearRegression().fit(x_train, y_train)\n",
+    "\n",
+    "# x_train = sm.add_constant(x_train) #constant epsilon (e)\n",
+    "# # Fit and summarize OLS model\n",
+    "# model = sm.OLS(y_train, x_train)\n",
+    "# res = model.fit()\n",
+    "# prediction = res.predict(x_train)\n",
+    "# # paramaters(Coefficient): res.params\n",
+    "# print(res.summary())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "640e6b55",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "# statsmodel_OLS - https://www.statsmodels.org/dev/regression.html\n",
+    "\n",
+    "multi_linear_coef = list()\n",
+    "\n",
+    "train_data = df.iloc[:,:-1]\n",
+    "test_data = df.iloc[:,-1]\n",
+    "regModel = LinearRegression().fit(train_data, test_data)\n",
+    "prediction = regModel.predict(train_data)\n",
+    "\n",
+    "train_data = sm.add_constant(train_data)\n",
+    "modelOLS = sm.OLS(test_data, train_data)\n",
+    "res = modelOLS.fit()\n",
+    "prediction = res.predict(train_data)\n",
+    "\n",
+    "for i in range(1, len(res.params)):\n",
+    "    multi_linear_coef.append(res.params[i])\n",
+    "\n",
+    "print(res.summary())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c7adb035",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "Answer:\n",
+    "- We rejects all the predictors because all the predictors' p-value is less than 0.05\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fd3ee20b",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (e) How do your results from 1c compare to your results from 1d? \n",
+    "Create a plot displaying the univariate regression coefficients from 1c on the x-axis, and the multiple regression coefficients from 1d on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regression model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "dcdbea26",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(simple_linear_coef)\n",
+    "print(multi_linear_coef)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "79223a96",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plt.scatter(simple_linear_coef, multi_linear_coef)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "20134a7e",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (f) Is there evidence of nonlinear association between any of the predictors and the response? \n",
+    "To answer this question, for each predictor X, fit a model of the form (2\n",
+    "\n",
+    "                        Y =β0 +β1X+β2X^2 +β3X^3 +ε\n",
+    "\n",
+    "2: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PolynomialFeatures.html"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2377b797",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import PolynomialFeatures\n",
+    "\n",
+    "EP = df.iloc[:,4] #target\n",
+    "for i in range(0,4):\n",
+    "    dataCol = df.iloc[:,i]\n",
+    "    # convert list to array to use .reshape()\n",
+    "    dataArray = np.array(dataCol)\n",
+    "    X = dataArray.reshape((-1,1))\n",
+    "    poly = PolynomialFeatures(3) #power 3\n",
+    "    polyData = poly.fit_transform(X)\n",
+    "    \n",
+    "    reg = LinearRegression().fit(polyData, EP)\n",
+    "    plt.plot(dataCol, EP,'o')\n",
+    "    plt.title('Simple Linear Regression Predict')\n",
+    "    plt.xlabel(xLabel[i])\n",
+    "    plt.ylabel('Electrical Energy(EP) - Output')\n",
+    "    # predict(X) - Predict using the linear model.\n",
+    "    prediction = reg.predict(polyData)\n",
+    "    plt.plot(X,prediction,'o')\n",
+    "    plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2d26aca3",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (g) Is there evidence of association of interactions of predictors with the response? \n",
+    "To answer this question, run a full linear regression model with all pairwise interaction terms and state whether any interaction terms are statistically significant.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a7b537b8",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import PolynomialFeatures\n",
+    "\n",
+    "X = df.iloc[:,:4] \n",
+    "y = df.iloc[:,4] #target\n",
+    "\n",
+    "#dataArray = np.array(X)\n",
+    "# parawise: degree = 2\n",
+    "polyModel = PolynomialFeatures(2, interaction_only=True) \n",
+    "polyFeature = polyModel.fit_transform(X)\n",
+    "polyFeature = pd.DataFrame(polyFeature, columns = polyModel.get_feature_names_out())\n",
+    "\n",
+    "polyFeature = sm.add_constant(polyFeature)\n",
+    "modelOLS = sm.OLS(y, polyFeature).fit()\n",
+    "#res = modelOLS.fit()\n",
+    "prediction = modelOLS.predict(polyFeature)\n",
+    "print(modelOLS.summary())\n",
+    "\n",
+    "print('\\n*************************************************************')\n",
+    "#print('Interaction terms are statistically significant when P-Value < 0.05:\\n< AT V, AT RH, V AP, AP RH >')\n",
+    "print(\"All pairwise interactionterms:\")\n",
+    "print(polyModel.get_feature_names_out())\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2bd683dc",
+   "metadata": {},
+   "source": [
+    "### Answer:\n",
+    "Interaction terms are statistically significant when P-Value < 0.05:\n",
+    "- AT V, AT RH, V AP, AP RH "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2afc89fe",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (h) Can you improve your model using possible interaction terms or nonlinear associations between the predictors and response? \n",
+    "Train the regression model on a randomly selected 70% subset of the data with all predictors. Also, run a regression model involving all possible interaction terms and quadratic nonlinearities, and remove insignificant variables using p-values (be careful about interaction terms). Test both models on the remaining points and report your train and test MSEs."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "682a6f7c",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                            OLS Regression Results                            \n",
+      "==============================================================================\n",
+      "Dep. Variable:                     PE   R-squared:                       0.936\n",
+      "Model:                            OLS   Adj. R-squared:                  0.936\n",
+      "Method:                 Least Squares   F-statistic:                 1.083e+04\n",
+      "Date:                Fri, 23 Sep 2022   Prob (F-statistic):               0.00\n",
+      "Time:                        23:43:55   Log-Likelihood:                -19281.\n",
+      "No. Observations:                6697   AIC:                         3.858e+04\n",
+      "Df Residuals:                    6687   BIC:                         3.865e+04\n",
+      "Df Model:                           9                                         \n",
+      "Covariance Type:            nonrobust                                         \n",
+      "==============================================================================\n",
+      "                 coef    std err          t      P>|t|      [0.025      0.975]\n",
+      "------------------------------------------------------------------------------\n",
+      "const      -8821.7066   1085.437     -8.127      0.000   -1.09e+04   -6693.904\n",
+      "x1            -2.3894      0.101    -23.556      0.000      -2.588      -2.191\n",
+      "x2            17.9130      2.145      8.352      0.000      13.709      22.118\n",
+      "x3             5.4328      0.759      7.161      0.000       3.946       6.920\n",
+      "x4             0.0394      0.002     24.256      0.000       0.036       0.043\n",
+      "x5            -0.0122      0.000    -30.988      0.000      -0.013      -0.011\n",
+      "x6            -0.0054      0.001     -6.155      0.000      -0.007      -0.004\n",
+      "x7            -0.0086      0.001     -8.114      0.000      -0.011      -0.007\n",
+      "x8            -0.0051      0.001     -6.964      0.000      -0.007      -0.004\n",
+      "x9            -0.0019      0.000     -6.980      0.000      -0.002      -0.001\n",
+      "==============================================================================\n",
+      "Omnibus:                      932.127   Durbin-Watson:                   1.976\n",
+      "Prob(Omnibus):                  0.000   Jarque-Bera (JB):             5675.094\n",
+      "Skew:                          -0.515   Prob(JB):                         0.00\n",
+      "Kurtosis:                       7.391   Cond. No.                     2.12e+10\n",
+      "==============================================================================\n",
+      "\n",
+      "Notes:\n",
+      "[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.\n",
+      "[2] The condition number is large, 2.12e+10. This might indicate that there are\n",
+      "strong multicollinearity or other numerical problems.\n",
+      "['1' 'AT' 'AP' 'RH' 'AT^2' 'AT V' 'AT RH' 'AP^2' 'AP RH' 'RH^2']\n",
+      "MSE: 18.997025503303462\n"
+     ]
+    }
+   ],
+   "source": [
+    "# https://medium.com/mlearning-ai/short-python-code-for-backward-elimination-with-detailed-explanation-52894a9a7880from sklearn.model_selection import train_test_split\n",
+    "import statsmodels.api as sm\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "from sklearn.preprocessing import PolynomialFeatures\n",
+    "\n",
+    "\n",
+    "X= df.iloc[:,:4] \n",
+    "y = df.iloc[:,4]\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=None)\n",
+    "polyModel = PolynomialFeatures(2, interaction_only=False) \n",
+    "polyX = polyModel.fit_transform(X_train)\n",
+    "Xtest = polyModel.fit_transform(X_test)\n",
+    "polyX = sm.add_constant(polyX)\n",
+    "# remove insignificant value\n",
+    "remove_polyX = polyX[:, [0,1,3,4,5,6,8,12,13,14]]\n",
+    "remove_Xtest = Xtest[:, [0,1,3,4,5,6,8,12,13,14]]\n",
+    "model = sm.OLS(y_train, remove_polyX)\n",
+    "res = model.fit()\n",
+    "featureName = polyModel.get_feature_names_out()\n",
+    "featureName = np.delete(featureName, [2,7,9,10,11])\n",
+    "\n",
+    "predict = res.predict(remove_Xtest)\n",
+    "model_mse = mean_squared_error(y_test, predict)\n",
+    "print(res.summary())\n",
+    "print(featureName)\n",
+    "print(\"MSE:\", model_mse)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b6777dcd",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# reshape error: https://stackoverflow.com/questions/37144913/getting-valueerror-the-indices-for-endog-and-exog-are-not-aligned\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "import statsmodels.api as sm\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "\n",
+    "X= df.iloc[:,:4] \n",
+    "y = df.iloc[:,4]\n",
+    "\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=None)\n",
+    "# y_train = y_train.values.reshape(-1,1)\n",
+    "# y_test = y_test.values.reshape(-1,1)\n",
+    "\n",
+    "# parawise interaction: degree = 2 \n",
+    "polyModel = PolynomialFeatures(2, interaction_only=True) \n",
+    "# quadratic nonlinearities: degree = 4, interaction_only = false\n",
+    "q_polyModel = PolynomialFeatures(4, interaction_only=False) \n",
+    "# fit.transform\n",
+    "poly_X_tn = polyModel.fit_transform(X_train)\n",
+    "poly_X_ts = polyModel.fit_transform(X_test)\n",
+    "poly_X_tn_q = q_polyModel.fit_transform(X_train)\n",
+    "poly_X_ts_q = q_polyModel.fit_transform(X_test)\n",
+    "\n",
+    "# poly_X_tn = pd.DataFrame(poly_X_tn, columns = polyModel.get_feature_names_out())\n",
+    "# poly_X_ts = pd.DataFrame(poly_X_ts, columns = polyModel.get_feature_names_out())\n",
+    "# poly_X_tn_q = pd.DataFrame(poly_X_tn_q, columns = q_polyModel.get_feature_names_out())\n",
+    "# poly_X_ts_q = pd.DataFrame(poly_X_ts_q, columns = q_polyModel.get_feature_names_out())\n",
+    "\n",
+    "# OLS report - parawise\n",
+    "modelOLS = sm.OLS(y_train, poly_X_tn).fit()\n",
+    "modelOLS_s = sm.OLS(y_test, poly_X_ts).fit()\n",
+    "print(modelOLS.summary())\n",
+    "\n",
+    "# OLS reprot - quadratic\n",
+    "q_modelOLS = sm.OLS(y_train, poly_X_tn_q).fit()\n",
+    "q_modelOLS_s = sm.OLS(y_test, poly_X_ts_q).fit()\n",
+    "print(q_modelOLS.summary())\n",
+    "\n",
+    "# predict\n",
+    "y_train_pred = modelOLS.predict(poly_X_tn)\n",
+    "y_test_pred = modelOLS.predict(poly_X_ts)\n",
+    "y_train_pred_q = q_modelOLS.predict(poly_X_tn_q)\n",
+    "y_test_pred_q = q_modelOLS.predict(poly_X_ts_q) \n",
+    "\n",
+    "\n",
+    "train_MSE = sum( (y_train_pred - y_train) ** 2 ) / len(y_train)\n",
+    "test_MSE = sum(  (y_test_pred - y_test) **2  ) / len(y_test)\n",
+    "train_q_MSE = sum( (y_train_pred_q - y_train) ** 2 ) / len(y_train)\n",
+    "test_q_MSE = sum(  (y_test_pred_q - y_test) **2  ) / len(y_test)\n",
+    "\n",
+    "# print(poly_X_tn.shape)\n",
+    "# print(y_train_pred.shape)\n",
+    "# train_MSE = mean_squared_error(poly_X_tn,y_train_pred)\n",
+    "\n",
+    "print(\"\\n\")\n",
+    "print(\"==============================================================\")\n",
+    "print(\" Train MSE for parawise interaction is : \" + str(train_MSE) )\n",
+    "print(\" Test MSE for parawise interaction is : \" + str(test_MSE) )\n",
+    "print(\" Train MSE for quadratic nonlinearities is : \" + str(train_q_MSE) )\n",
+    "print(\" Test MSE for quadratic nonlinearities is : \" + str(test_q_MSE) )\n",
+    "print(\"==============================================================\")\n",
+    "\n",
+    "\n",
+    "# get p-value from OLS value\n",
+    "# https://stackoverflow.com/questions/41075098/how-to-get-the-p-value-in-a-variable-from-olsresults-in-python\n",
+    "# using coef = 0 as the remove p>0.05 contents and store <0.05 into a new array\n",
+    "#print(len(res_q.pvalues)-1)\n",
+    "\n",
+    "#print(res_q.pvalues[i])\n",
+    "    # Filter only those with a P-value less than 5% - this will be a pandas series\n",
+    "    #https://stackoverflow.com/questions/56957100/automatically-drop-variables-with-p-value-greater-than-5-from-linear-regression\n",
+    "    #keep_pvals = res_q.pvalues[res_q.pvalues <= .005]\n",
+    "    \n",
+    "\n",
+    "# print(q_polyModel.get_feature_names_out())\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a3a70190",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# reshape error: https://stackoverflow.com/questions/37144913/getting-valueerror-the-indices-for-endog-and-exog-are-not-aligned\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "import statsmodels.api as sm\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "\n",
+    "X= df.iloc[:,:4] \n",
+    "y = df.iloc[:,4]\n",
+    "\n",
+    "# parawise interaction: degree = 2 \n",
+    "polyModel = PolynomialFeatures(2, interaction_only=True) \n",
+    "# quadratic nonlinearities: degree = 4, interaction_only = false\n",
+    "q_polyModel = PolynomialFeatures(4, interaction_only=False) \n",
+    "\n",
+    "# X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=None)\n",
+    "# y_train = y_train.values.reshape(-1,1)\n",
+    "# y_test = y_test.values.reshape(-1,1)\n",
+    "\n",
+    "# fit.transform\n",
+    "polyFeatureX = polyModel.fit_transform(X)\n",
+    "polyFeatureXq = q_polyModel.fit_transform(X)\n",
+    "\n",
+    "polyFeatureX = pd.DataFrame(polyFeatureX, columns = polyModel.get_feature_names_out())\n",
+    "polyFeatureXq = pd.DataFrame(polyFeatureXq, columns = q_polyModel.get_feature_names_out())\n",
+    "\n",
+    "# OLS report - parawise\n",
+    "model = sm.OLS(y, polyFeatureX).fit()\n",
+    "\n",
+    "# y_train_pred = modelOLS.predict(poly_X_tn)\n",
+    "# y_test_pred = modelOLS.predict(poly_X_ts)\n",
+    "\n",
+    "print(modelOLS.summary())\n",
+    "# OLS reprot - quadratic\n",
+    "model_q = sm.OLS(y, polyFeatureXq).fit()\n",
+    "\n",
+    "#print(q_modelOLS.summary())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d728e821",
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [],
+   "source": [
+    "# Parawise interation after remove insignificant value\n",
+    "remove_p = []\n",
+    "featureName = list(polyModel.get_feature_names_out())\n",
+    "\n",
+    "for i in range (0, len(model.pvalues)-1):\n",
+    "    if (modelOLS.pvalues[i] > 0.05):\n",
+    "        remove_p.append(featureName[i])\n",
+    "\n",
+    "polyFeatureX = polyFeatureX.drop(remove_p, axis=1)\n",
+    "\n",
+    "X_train, X_test, y_train, y_test = train_test_split(polyFeatureX, y, train_size=0.7, random_state=None)\n",
+    "y_train = y_train.values.reshape(-1,1)\n",
+    "\n",
+    "print(y_train.shape)\n",
+    "print(x_train.shape)\n",
+    "model = sm.OLS(y_train, x_train).fit()\n",
+    "\n",
+    "y_train_pred = model.predict(x_train)\n",
+    "y_test_pred = model.predict(x_test)\n",
+    "\n",
+    "#print(model.summary())\n",
+    "\n",
+    "train_MSE = sum( (y_train_pred - y_train) ** 2 ) / len(y_train)\n",
+    "test_MSE = sum(  (y_test_pred - y_test) **2  ) / len(y_test)\n",
+    "print(\"\\n\")\n",
+    "print(\"==============================================================\")\n",
+    "print(\" Train MSE for parawise interaction is : \" + str(train_MSE) )\n",
+    "print(\" Test MSE for parawise interaction is : \" + str(test_MSE) )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d7c596f5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Quadratic nonlinearities after removing insignificant value\n",
+    "remove_q = []\n",
+    "remove_q_s = []\n",
+    "featureName = list(q_polyModel.get_feature_names_out())\n",
+    "#print(featureName)\n",
+    "\n",
+    "qLen = len(q_modelOLS.pvalues)\n",
+    "qLen_s = len(q_modelOLS_s.pvalues)\n",
+    "#print(\"Quadratic p value > 0.05: \")\n",
+    "for i in range (1, qLen):\n",
+    "    if q_modelOLS.pvalues[i] > 0.05:\n",
+    "        #print ( str(i) + \"  \" + str (res.pvalues[i] ) )\n",
+    "        remove_q.append(featureName[i])\n",
+    "for i in range(1, qLen_s):\n",
+    "    if q_modelOLS_s.pvalues[i] > 0.05:\n",
+    "        remove_q_s.append(featureName[i])\n",
+    "\n",
+    "poly_X_tn_q = poly_X_tn_q.drop(remove_q, axis=1)\n",
+    "poly_X_ts_q = poly_X_ts_q.drop(remove_q_s, axis=1)\n",
+    "# print(remove_q)\n",
+    "# print(remove_q_s)\n",
+    "q_modelOLS = sm.OLS(y_train, poly_X_tn_q).fit()\n",
+    "q_modelOLS_s = sm.OLS(y_test, poly_X_ts_q).fit()\n",
+    "print(q_modelOLS.summary())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e9d69710",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "y_train_pred = modelOLS.predict(poly_X_tn)\n",
+    "y_test_pred = modelOLS.predict(poly_X_ts)\n",
+    "# y_train_pred_q = q_modelOLS.predict(poly_X_tn_q)\n",
+    "# y_test_pred_q = q_modelOLS.predict(poly_X_ts_q) \n",
+    "\n",
+    "# print(y_test_pred.shape)\n",
+    "# print(y_test.shape)\n",
+    "\n",
+    "train_MSE = sum( (y_train_pred - y_train) ** 2 ) / len(y_train)\n",
+    "test_MSE = sum(  (y_test_pred - y_test) **2  ) / len(y_test)\n",
+    "# train_q_MSE = sum( (y_train_pred_q - y_train) ** 2 ) / len(y_train)\n",
+    "# test_q_MSE = sum(  (y_test_pred_q - y_test) **2  ) / len(y_test)\n",
+    "\n",
+    "# print(poly_X_tn.shape)\n",
+    "# print(y_train_pred.shape)\n",
+    "# train_MSE = mean_squared_error(poly_X_tn,y_train_pred)\n",
+    "\n",
+    "print(\"\\n\")\n",
+    "print(\"==============================================================\")\n",
+    "print(\" Train MSE for parawise interaction is : \" + str(train_MSE) )\n",
+    "print(\" Test MSE for parawise interaction is : \" + str(test_MSE) )\n",
+    "# print(\" Train MSE for quadratic nonlinearities is : \" + str(train_q_MSE) )\n",
+    "# print(\" Test MSE for quadratic nonlinearities is : \" + str(test_q_MSE) )\n",
+    "print(\"==============================================================\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "91c8e674",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (i) KNN Regression:\n",
+    "i. Perform k-nearest neighbor regression for this dataset using both normalized and raw features. Find the value of k ∈ {1,2,...,100} that gives you the best fit. Plot the train and test errors in terms of 1/k."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3ce9ee6b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html\n",
+    "from sklearn.neighbors import KNeighborsRegressor\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "\n",
+    "test_error = []\n",
+    "train_error = []\n",
+    "knn_value = []\n",
+    "X_train_r, X_test_r, y_train_r, y_test_r = train_test_split(X, y, train_size=0.7, random_state=None)\n",
+    "\n",
+    "for i in range (1, 101):\n",
+    "    neigh = KNeighborsRegressor(n_neighbors=i)\n",
+    "    neigh.fit(X_train_r, y_train_r)\n",
+    "   \n",
+    "    train_error.append(1 - neigh.score(X_train_r, y_train_r))\n",
+    "    test_error.append(1 - neigh.score(X_test_r, y_test_r))\n",
+    "    knn_value.append(1/i)\n",
+    "\n",
+    "min_error = min(test_error)\n",
+    "best_k = knn_value[test_error.index(min_error)]\n",
+    "print(\"Raw Best K-value: \", best_k)\n",
+    "print(\"error:\", min_error)\n",
+    "\n",
+    "plt.title('KNN train and test error with raw feature')  \n",
+    "plt.plot(knn_value, train_error, label ='Training Error Rate')\n",
+    "plt.plot(knn_value, test_error, label = 'Test Error Rate')\n",
+    "plt.xlabel('Number of neighbors - k')\n",
+    "plt.ylabel('Error Rate')\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "33cf9958",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "test_error = []\n",
+    "train_error = []\n",
+    "knn_value = []\n",
+    "\n",
+    "X= df.iloc[:,:4] \n",
+    "y = df.iloc[:,4]\n",
+    "\n",
+    "X_normalized = (X-X.min())/(X.max()-X.min())\n",
+    "y_normalized = (y-y.min())/(y.max()-y.min())\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X_normalized, y_normalized, train_size=0.7, random_state=None)\n",
+    "\n",
+    "\n",
+    "for i in range (1, 101):\n",
+    "    neigh = KNeighborsRegressor(n_neighbors=i)\n",
+    "    neigh.fit(X_train, y_train)\n",
+    "   \n",
+    "    train_error.append(1 - neigh.score(X_train, y_train))\n",
+    "    test_error.append(1 - neigh.score(X_test, y_test))\n",
+    "    #test_error.append(1 - neigh.score(X_test, y_test))\n",
+    "    knn_value.append(1/i)\n",
+    "\n",
+    "min_error = min(test_error)\n",
+    "best_k = knn_value[test_error.index(min_error)]\n",
+    "print(\"Raw Best K-value: \", best_k)\n",
+    "print(\"error:\", min_error)\n",
+    "\n",
+    "plt.title('KNN train and test error with normalized feature')  \n",
+    "plt.plot(knn_value, train_error, label = 'Training Error Rate')\n",
+    "plt.plot(knn_value, test_error, label = 'Test Error Rate')\n",
+    "plt.xlabel('Number of neighbors - k')\n",
+    "plt.ylabel('Error Rate')\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7d45a80d",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### (j) Compare the results of KNN Regression with the linear regression model that has the smallest test error and provide your analysis.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ee454b8e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.metrics import mean_squared_error\n",
+    "# simple linear regression\n",
+    "\n",
+    "# multi linear regression\n",
+    "\n",
+    "# polinomial \n",
+    "\n",
+    "# quardratic \n",
+    "\n",
+    "# knn"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0e5428cb",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### 2. ISLR: 2.4.1\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b3bef40b",
+   "metadata": {},
+   "source": [
+    "For each of parts (a) through (d), indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.\n",
+    "\n",
+    "(a) The sample size n is extremely large, and the number of predictors p is small.\n",
+    "- **Answer:** We would have sufficient information about each predictor. It is better than inflexible method because the flexible method will work better when having large n sample size (reduces the risk of overfitting)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2fc0a0fe",
+   "metadata": {},
+   "source": [
+    "(b) The number of predictors p is extremely large, and the number of observations n is small.\n",
+    "- **Answer:** Worst. Because if we choose flexible method in this case, it would overfit the model due to smalller number of observations."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "627b0b9b",
+   "metadata": {},
+   "source": [
+    "(c) The relationship between the predictors and response is highly non-linear.\n",
+    "- **Answer:** Flexible method would fit better with more degrees of freedom and it would has less bias. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b6f3f84",
+   "metadata": {},
+   "source": [
+    "(d) The variance of the error terms, i.e. σ2 = Var(), is extremely high.\n",
+    "- **Answer:** Worst. To avoid the overfitting and increase the variance, the inflexible method would be a better choice.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6e5d9f34",
+   "metadata": {
+    "id": "sIeUCs18wuXv"
+   },
+   "source": [
+    "### 3. ISLR: 2.4.7\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "10e35498",
+   "metadata": {},
+   "source": [
+    "The table below provides a training data set containing six observations, three predictors, and one qualitative response variable.\n",
+    "\n",
+    "a) Compute the Euclidean distance between each observation and the test point, X1=X2=X3=0\n",
+    "- Euclidean distance formula: dist((x,y),(a,b))=sqrt((x-a)²+(y-b)²)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bdac48d6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "pts = [[0,3,0],[2,0,0],[0,1,3],[0,1,2],[-1,0,1],[1,1,1]]\n",
+    "for i in range(0,len(pts) ):\n",
+    "    distance = math.sqrt((0-pts[i][0])**2+(0-pts[i][1])**2+(0-pts[i][2])**2)\n",
+    "    print(str(i+1)+\"th point \",distance)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d4bd2f05",
+   "metadata": {},
+   "source": [
+    "(b) What is our prediction with K = 1? Why?\n",
+    "- **Answer:** For K=1, the nearest neighbor is [-1,0,1] with lable(Y) Green (our prediction)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f3023d24",
+   "metadata": {},
+   "source": [
+    "(c) What is our prediction with K = 3? Why?\n",
+    "- **Answer:** For K=3, the 3 nearest neighbors are [-1,0,1][1,1,1][2,0,0] with lables(Y) Green, Red and Red. We predict Red because of more red. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "00f8d09f",
+   "metadata": {},
+   "source": [
+    "(d) If the Bayes decision boundary in this problem is highly nonlinear, then would we expect the best value for K to be large or small? Why?\n",
+    "- **Answer:** When K becomes larger, the boundary becomes inflexible (linear). So in this case we would expect the best value for K to be small."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
